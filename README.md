@@ -1,4 +1,6 @@
 ruby_sandbox
 ============
 
-ruby code, command line programs
+Basic command-line programs. 
+
+ * Ruby 2.0.0
