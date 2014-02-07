@@ -1,0 +1,65 @@
+#!/usr/bin/env ruby
+require 'open-uri'
+require 'zlib'
+require 'yajl'
+require 'optparse'
+
+
+options = {}
+# [--after DATETIME] [--before DATETIME] [--event EVENT_NAME] [-n COUNT]
+opt_parser = OptionParser.new do |opt|
+  opt.banner = "Usage: gh_repo_stats [OPTIONS]"
+  opt.separator  ""
+  opt.separator  "Options"
+
+  opt.on("-e","--event EVENT_NAME","which event type you want to see") do |event|
+    options[:event] = event
+  end
+  
+  opt.on("-n","--count COUNT","how many top repos you want to see") do |count|
+    options[:count] = count
+  end
+
+  opt.on("-a","--after TIME","starting after TIME") do |after|
+    options[:after] = after
+  end
+
+  opt.on("-b","--before TIME","starting before TIME") do |before|
+    options[:before] = before
+  end
+
+end
+
+opt_parser.parse!
+
+after  = DateTime.parse(options[:after])
+before  = DateTime.parse(options[:before])
+event_type = options[:event]
+count  = options[:count].to_i
+matching = Hash.new(0)
+
+json = ""
+while after < before
+  year = after.year
+  month = "%02d" % after.month
+  day = "%02d" % after.day
+  hour = "%02d" % after.hour
+  date_by_hour = "#{year}-#{month}-#{day}-#{hour}"
+#  puts 'http://data.githubarchive.org/' + date_by_hour + '.json.gz'
+  gz = open('http://data.githubarchive.org/' + date_by_hour + '.json.gz')
+  json += Zlib::GzipReader.new(gz).read
+  after = after + 1.0/24  
+end
+
+Yajl::Parser.parse(json) do |event|
+  if(event["type"] == event_type)
+    repo_name = event["repository"]["owner"] + "/" + event["repository"]["name"]
+    matching[repo_name] += 1
+  end
+end
+
+sorted = matching.sort_by {|k,v| v}.reverse.first(count)
+for element in sorted
+  puts element[0] + " - " + element[1].to_s + " events"
+end  
+  
