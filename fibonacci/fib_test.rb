@@ -1,8 +1,9 @@
-require 'test/unit'
+require 'minitest/autorun'
 require_relative 'fib_to_1000'
 
-class TestCompoundInterest < Test::Unit::TestCase
-  def fib_test
-    assert_equal("1 1 2 4 8 16 32 64 128 256 512", fib_up_to(1000) {|f| "#{f} "} )
+class TestCompoundInterest < Minitest::Test
+
+  def test_that_fib
+    assert_equal [2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233], fib_up_to(100) {|f| "#{f} "}
   end
 end
